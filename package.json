@@ -1,0 +1,45 @@
+{
+  "name": "sentinel-soil-analysis",
+  "version": "1.0.0",
+  "description": "Advanced satellite-based soil analysis using Sentinel-2 data for moisture, composition, and agricultural insights",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js",
+    "setup": "node setup-sentinel.js",
+    "setup-sentinel": "node setup-sentinel.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "sentinel",
+    "satellite",
+    "soil-analysis",
+    "agriculture",
+    "remote-sensing",
+    "geospatial",
+    "earth-observation",
+    "NDVI",
+    "soil-moisture"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "dependencies": {
+    "@turf/turf": "^7.2.0",
+    "axios": "^1.10.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.0",
+    "express": "^5.1.0",
+    "gdal-async": "^3.11.3",
+    "moment": "^2.30.1",
+    "multer": "^2.0.1",
+    "node-fetch": "^2.7.0",
+    "sharp": "^0.34.3",
+    "sqlite3": "^5.1.7"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
+}

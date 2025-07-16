@@ -1,0 +1,1730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentinel Soil Analysis Platform</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary-color: #10b981;
+            --accent-color: #f59e0b;
+            --danger-color: #ef4444;
+            --warning-color: #f97316;
+            --success-color: #22c55e;
+            --background: #f8fafc;
+            --surface: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border-color: #e2e8f0;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --border-radius: 12px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            min-height: 100vh;
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow);
+        }
+
+        .navbar-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .logo i {
+            font-size: 2rem;
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--success-color);
+            color: white;
+            border-radius: 2rem;
+            font-weight: 500;
+        }
+
+        .status-indicator.offline {
+            background: var(--danger-color);
+        }
+
+        .pulse {
+            width: 8px;
+            height: 8px;
+            background: white;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+
+        .hero-section {
+            text-align: center;
+            padding: 3rem 0;
+            color: white;
+        }
+
+        .hero-title {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #ffffff, #e0e7ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-subtitle {
+            font-size: 1.25rem;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .search-card {
+            background: var(--surface);
+            padding: 2.5rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-lg);
+            margin-bottom: 2rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .search-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .search-header h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .search-header p {
+            color: var(--text-secondary);
+        }
+
+        .search-form {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr auto;
+            gap: 1.5rem;
+            align-items: end;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-label {
+            font-weight: 500;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-input {
+            padding: 0.875rem 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: var(--transition);
+            background: var(--surface);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .location-input-container {
+            position: relative;
+        }
+
+        .location-type-selector {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .location-type-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-color);
+            background: var(--surface);
+            border-radius: 6px;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+        }
+
+        .location-type-btn:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .location-type-btn.active {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+        }
+
+        .location-search-loading {
+            display: none;
+            padding: 1rem;
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .location-search-loading i {
+            margin-right: 0.5rem;
+        }
+
+        .analyze-btn {
+            background: linear-gradient(45deg, var(--primary-color), var(--primary-dark));
+            color: white;
+            border: none;
+            padding: 0.875rem 2rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            height: fit-content;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .analyze-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .analyze-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading-dots {
+            display: none;
+        }
+
+        .analyze-btn.loading .loading-dots {
+            display: inline-block;
+        }
+
+        .analyze-btn.loading .btn-text {
+            display: none;
+        }
+
+        .quick-locations {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .quick-locations h3 {
+            font-size: 1rem;
+            font-weight: 500;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .location-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+
+        .location-chip {
+            background: var(--background);
+            border: 1px solid var(--border-color);
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .location-chip:hover {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .location-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--surface);
+            border: 1px solid var(--border-color);
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .location-suggestion {
+            padding: 1rem;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border-color);
+            transition: var(--transition);
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+        }
+
+        .location-suggestion:hover {
+            background: var(--background);
+        }
+
+        .location-suggestion:last-child {
+            border-bottom: none;
+        }
+
+        .suggestion-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+            color: white;
+            flex-shrink: 0;
+            margin-top: 0.125rem;
+        }
+
+        .suggestion-icon.city { background: linear-gradient(45deg, #3b82f6, #1d4ed8); }
+        .suggestion-icon.agricultural { background: linear-gradient(45deg, #10b981, #059669); }
+        .suggestion-icon.town { background: linear-gradient(45deg, #f59e0b, #d97706); }
+        .suggestion-icon.village { background: linear-gradient(45deg, #8b5cf6, #7c3aed); }
+
+        .suggestion-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .suggestion-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .suggestion-details {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            display: flex;
+            flex-direction: column;
+            gap: 0.125rem;
+        }
+
+        .suggestion-coords {
+            font-family: 'Courier New', monospace;
+            font-size: 0.75rem;
+            opacity: 0.8;
+        }
+
+        .suggestion-type {
+            display: inline-block;
+            padding: 0.125rem 0.5rem;
+            background: var(--background);
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-top: 0.25rem;
+            width: fit-content;
+        }
+
+        .alert {
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            display: none;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 500;
+        }
+
+        .alert.error {
+            background: #fef2f2;
+            color: #dc2626;
+            border: 1px solid #fecaca;
+        }
+
+        .alert.success {
+            background: #f0fdf4;
+            color: #16a34a;
+            border: 1px solid #bbf7d0;
+        }
+
+        .loading-section {
+            display: none;
+            text-align: center;
+            padding: 3rem;
+            background: var(--surface);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            margin: 2rem 0;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid var(--border-color);
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1.5rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: var(--text-secondary);
+            font-size: 1.125rem;
+        }
+
+        .results-section {
+            display: none;
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .results-header {
+            background: var(--surface);
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .results-location {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .location-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .location-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.25rem;
+        }
+
+        .location-details h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .location-details p {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .analysis-meta {
+            display: flex;
+            gap: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .result-card {
+            background: var(--surface);
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            transition: var(--transition);
+        }
+
+        .result-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .card-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            color: white;
+        }
+
+        .card-icon.moisture { background: linear-gradient(45deg, #3b82f6, #1d4ed8); }
+        .card-icon.vegetation { background: linear-gradient(45deg, #10b981, #059669); }
+        .card-icon.composition { background: linear-gradient(45deg, #f59e0b, #d97706); }
+        .card-icon.temperature { background: linear-gradient(45deg, #ef4444, #dc2626); }
+        .card-icon.fertility { background: linear-gradient(45deg, #8b5cf6, #7c3aed); }
+        .card-icon.quality { background: linear-gradient(45deg, #6b7280, #4b5563); }
+
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .metric:last-child {
+            border-bottom: none;
+        }
+
+        .metric-label {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .metric-value {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .progress-container {
+            margin: 1rem 0;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--border-color);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.8s ease-out;
+        }
+
+        .progress-fill.moisture { background: linear-gradient(90deg, #3b82f6, #1d4ed8); }
+        .progress-fill.vegetation { background: linear-gradient(90deg, #10b981, #059669); }
+        .progress-fill.fertility { background: linear-gradient(90deg, #8b5cf6, #7c3aed); }
+
+        .recommendations-section {
+            background: var(--surface);
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+        }
+
+        .recommendations-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .recommendations-header h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .recommendation {
+            background: var(--background);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border-left: 4px solid var(--primary-color);
+            transition: var(--transition);
+        }
+
+        .recommendation:hover {
+            transform: translateX(4px);
+        }
+
+        .recommendation.high-priority {
+            border-left-color: var(--danger-color);
+            background: #fef2f2;
+        }
+
+        .recommendation.medium-priority {
+            border-left-color: var(--warning-color);
+            background: #fffbeb;
+        }
+
+        .recommendation.low-priority {
+            border-left-color: var(--success-color);
+            background: #f0fdf4;
+        }
+
+        .recommendation-header {
+            display: flex;
+            align-items: center;
+            justify-content: between;
+            margin-bottom: 0.75rem;
+        }
+
+        .recommendation-type {
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.875rem;
+            letter-spacing: 0.05em;
+        }
+
+        .priority-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-left: auto;
+        }
+
+        .priority-badge.high { background: #fecaca; color: #dc2626; }
+        .priority-badge.medium { background: #fed7aa; color: #ea580c; }
+        .priority-badge.low { background: #bbf7d0; color: #16a34a; }
+
+        .recommendation-message {
+            margin-bottom: 0.5rem;
+            line-height: 1.5;
+        }
+
+        .recommendation-action {
+            font-style: italic;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2rem;
+            }
+            
+            .hero-subtitle {
+                font-size: 1rem;
+            }
+            
+            .search-form {
+                grid-template-columns: 1fr;
+            }
+            
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .navbar-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .nav-info {
+                order: -1;
+            }
+            
+            .analysis-meta {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            
+            .location-chips {
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 0 1rem;
+            }
+            
+            .search-card, .result-card, .recommendations-section {
+                padding: 1.5rem;
+            }
+            
+            .location-info {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-content">
+            <div class="logo">
+                <i class="fas fa-satellite"></i>
+                <span>Sentinel Soil Analysis</span>
+            </div>
+            <div class="nav-info">
+                <div class="status-indicator" id="statusIndicator">
+                    <div class="pulse"></div>
+                    <span id="statusText">System Online</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="hero-section">
+        <div class="container">
+            <h1 class="hero-title">Advanced Soil Intelligence</h1>
+            <p class="hero-subtitle">
+                Harness the power of Sentinel-2 satellite imagery to unlock comprehensive insights 
+                about soil moisture, composition, and agricultural potential for any location on Earth.
+            </p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="search-card">
+            <div class="search-header">
+                <h2>Analyze Your Location</h2>
+                <p>Enter coordinates or search for a location to get detailed soil analysis</p>
+            </div>
+            
+            <form class="search-form" id="analysisForm">
+                <div class="form-group">
+                    <label class="form-label" for="location">
+                        <i class="fas fa-map-marker-alt"></i>
+                        Location
+                    </label>
+                    <div class="location-input-container">
+                        <input 
+                            type="text" 
+                            id="location" 
+                            class="form-input"
+                            placeholder="Enter city name (e.g., New York) or coordinates (lat, lon)" 
+                            required
+                            autocomplete="off"
+                        >
+                        <div class="location-suggestions" id="locationSuggestions">
+                            <div class="location-search-loading" id="locationLoading">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                Searching locations...
+                            </div>
+                        </div>
+                        <div class="location-type-selector">
+                            <button type="button" class="location-type-btn active" data-type="all">
+                                <i class="fas fa-globe"></i> All
+                            </button>
+                            <button type="button" class="location-type-btn" data-type="agricultural">
+                                <i class="fas fa-seedling"></i> Agricultural
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="startDate">
+                        <i class="fas fa-calendar-alt"></i>
+                        Start Date
+                    </label>
+                    <input type="date" id="startDate" class="form-input">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="endDate">
+                        <i class="fas fa-calendar-check"></i>
+                        End Date
+                    </label>
+                    <input type="date" id="endDate" class="form-input">
+                </div>
+                
+                <button type="submit" class="analyze-btn" id="analyzeBtn">
+                    <span class="btn-text">
+                        <i class="fas fa-microscope"></i>
+                        Analyze Soil
+                    </span>
+                    <span class="loading-dots">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        Analyzing...
+                    </span>
+                </button>
+            </form>
+
+            <div class="quick-locations">
+                <h3><i class="fas fa-star"></i> Popular Agricultural Locations</h3>
+                <div class="location-chips">
+                    <div class="location-chip" data-coords="36.7378,-119.7871" data-name="Central Valley, California, USA">
+                        <i class="fas fa-seedling"></i>
+                        Central Valley, CA
+                    </div>
+                    <div class="location-chip" data-coords="45.4642,9.1900" data-name="Po Valley, Lombardy, Italy">
+                        <i class="fas fa-wheat-awn"></i>
+                        Po Valley, Italy
+                    </div>
+                    <div class="location-chip" data-coords="30.9010,75.8573" data-name="Punjab, India">
+                        <i class="fas fa-leaf"></i>
+                        Punjab, India
+                    </div>
+                    <div class="location-chip" data-coords="-34.6118,-58.3960" data-name="Pampas, Buenos Aires, Argentina">
+                        <i class="fas fa-mountain"></i>
+                        Pampas, Argentina
+                    </div>
+                    <div class="location-chip" data-coords="37.6872,-97.3301" data-name="Great Plains, Kansas, USA">
+                        <i class="fas fa-tractor"></i>
+                        Great Plains, KS
+                    </div>
+                    <div class="location-chip" data-coords="40.7128,-74.0060" data-name="New York City, NY, USA">
+                        <i class="fas fa-city"></i>
+                        New York City
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="alert error" id="errorMessage">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span></span>
+        </div>
+        
+        <div class="loading-section" id="loading">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">
+                <strong>Analyzing satellite data...</strong><br>
+                Processing Sentinel-2 imagery and calculating soil parameters
+            </div>
+        </div>
+
+        <div class="results-section" id="results">
+            <div class="results-header">
+                <div class="results-location">
+                    <div class="location-info">
+                        <div class="location-icon">
+                            <i class="fas fa-map-pin"></i>
+                        </div>
+                        <div class="location-details">
+                            <h3 id="locationName">Analysis Results</h3>
+                            <p id="locationDescription">Loading location information...</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="analysis-meta">
+                    <div class="meta-item">
+                        <i class="fas fa-calendar"></i>
+                        <span id="analysisDate">-</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-satellite"></i>
+                        <span id="sceneCount">- scenes analyzed</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-cloud"></i>
+                        <span id="cloudCoverMeta">- cloud cover</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="results-grid">
+                <div class="result-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <div class="card-icon moisture">
+                                <i class="fas fa-tint"></i>
+                            </div>
+                            Soil Moisture
+                        </div>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-header">
+                            <span class="metric-label">Moisture Level</span>
+                            <span class="metric-value" id="moistureLevel">-</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill moisture" id="moistureProgress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Percentage</span>
+                        <span class="metric-value" id="moisturePercentage">-</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">NDMI Value</span>
+                        <span class="metric-value" id="ndmiValue">-</span>
+                    </div>
+                </div>
+
+                <div class="result-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <div class="card-icon vegetation">
+                                <i class="fas fa-leaf"></i>
+                            </div>
+                            Vegetation Health
+                        </div>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-header">
+                            <span class="metric-label">NDVI Index</span>
+                            <span class="metric-value" id="ndviValue">-</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill vegetation" id="ndviProgress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Health Status</span>
+                        <span class="metric-value" id="vegetationHealth">-</span>
+                    </div>
+                </div>
+
+                <div class="result-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <div class="card-icon composition">
+                                <i class="fas fa-layer-group"></i>
+                            </div>
+                            Soil Composition
+                        </div>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Clay Content</span>
+                        <span class="metric-value" id="clayContent">-</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Sand Content</span>
+                        <span class="metric-value" id="sandContent">-</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Silt Content</span>
+                        <span class="metric-value" id="siltContent">-</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Soil Type</span>
+                        <span class="metric-value" id="soilType">-</span>
+                    </div>
+                </div>
+
+                <div class="result-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <div class="card-icon temperature">
+                                <i class="fas fa-thermometer-half"></i>
+                            </div>
+                            Environment
+                        </div>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Surface Temperature</span>
+                        <span class="metric-value" id="soilTemp">-</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">pH Level</span>
+                        <span class="metric-value" id="phLevel">-</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Organic Matter</span>
+                        <span class="metric-value" id="organicMatter">-</span>
+                    </div>
+                </div>
+
+                <div class="result-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <div class="card-icon fertility">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            Fertility Analysis
+                        </div>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-header">
+                            <span class="metric-label">Fertility Score</span>
+                            <span class="metric-value" id="fertilityScore">-</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill fertility" id="fertilityProgress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Fertility Level</span>
+                        <span class="metric-value" id="fertilityLevel">-</span>
+                    </div>
+                </div>
+
+                <div class="result-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <div class="card-icon quality">
+                                <i class="fas fa-shield-alt"></i>
+                            </div>
+                            Data Quality
+                        </div>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Confidence</span>
+                        <span class="metric-value" id="confidence">-</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Cloud Cover</span>
+                        <span class="metric-value" id="cloudCover">-</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Data Source</span>
+                        <span class="metric-value" id="dataSource">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="recommendations-section">
+                <div class="recommendations-header">
+                    <i class="fas fa-lightbulb"></i>
+                    <h3>Smart Recommendations</h3>
+                </div>
+                <div id="recommendationsList"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+        });
+
+        function initializeApp() {
+            setDefaultDates();
+            setupEventListeners();
+            checkAPIStatus();
+        }
+
+        // Set default dates
+        function setDefaultDates() {
+            const today = new Date();
+            const thirtyDaysAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+            
+            document.getElementById('endDate').value = today.toISOString().split('T')[0];
+            document.getElementById('startDate').value = thirtyDaysAgo.toISOString().split('T')[0];
+        }
+
+        // Setup all event listeners
+        function setupEventListeners() {
+            setupLocationSearch();
+            setupQuickLocationChips();
+            setupFormSubmission();
+        }
+
+        // Location search functionality
+        let searchTimeout;
+        let currentSearchType = 'all';
+        const locationInput = document.getElementById('location');
+        const locationSuggestions = document.getElementById('locationSuggestions');
+
+        function setupLocationSearch() {
+            // Input event for typing
+            locationInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                const query = this.value.trim();
+                
+                if (query.length < 2) {
+                    locationSuggestions.style.display = 'none';
+                    return;
+                }
+
+                // Check if input looks like coordinates
+                const coordMatch = query.match(/^(-?\d+\.?\d*),?\s*(-?\d+\.?\d*)$/);
+                if (coordMatch) {
+                    // Don't search if it's already coordinates
+                    locationSuggestions.style.display = 'none';
+                    return;
+                }
+
+                searchTimeout = setTimeout(() => {
+                    searchLocations(query);
+                }, 300);
+            });
+
+            // Focus and blur events
+            locationInput.addEventListener('blur', function() {
+                setTimeout(() => {
+                    locationSuggestions.style.display = 'none';
+                }, 200);
+            });
+
+            locationInput.addEventListener('focus', function() {
+                const query = this.value.trim();
+                if (query.length >= 2 && !query.match(/^(-?\d+\.?\d*),?\s*(-?\d+\.?\d*)$/)) {
+                    searchLocations(query);
+                }
+            });
+
+            // Location type selector
+            const typeButtons = document.querySelectorAll('.location-type-btn');
+            typeButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // Update active state
+                    typeButtons.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Update search type
+                    currentSearchType = this.getAttribute('data-type');
+                    
+                    // Re-search if there's a query
+                    const query = locationInput.value.trim();
+                    if (query.length >= 2) {
+                        searchLocations(query);
+                    }
+                });
+            });
+        }
+
+        // Quick location chips
+        function setupQuickLocationChips() {
+            const locationChips = document.querySelectorAll('.location-chip');
+            locationChips.forEach(chip => {
+                chip.addEventListener('click', function() {
+                    const coords = this.getAttribute('data-coords');
+                    const name = this.getAttribute('data-name');
+                    
+                    locationInput.value = coords;
+                    locationSuggestions.style.display = 'none';
+                    
+                    // Store location name for display
+                    if (name) {
+                        locationInput.setAttribute('data-location-name', name);
+                        // Parse name to extract city and country
+                        const parts = name.split(', ');
+                        if (parts.length >= 2) {
+                            locationInput.setAttribute('data-city', parts[0]);
+                            locationInput.setAttribute('data-country', parts[parts.length - 1]);
+                            if (parts.length > 2) {
+                                locationInput.setAttribute('data-region', parts[1]);
+                            }
+                        }
+                    }
+                    
+                    // Add visual feedback
+                    this.style.transform = 'scale(0.95)';
+                    setTimeout(() => {
+                        this.style.transform = 'scale(1)';
+                    }, 150);
+                });
+            });
+        }
+
+        // Form submission
+        function setupFormSubmission() {
+            document.getElementById('analysisForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const location = document.getElementById('location').value.trim();
+                const startDate = document.getElementById('startDate').value;
+                const endDate = document.getElementById('endDate').value;
+                
+                let lat, lon;
+                
+                // Check if input is coordinates
+                const coordMatch = location.match(/^(-?\d+\.?\d*),?\s*(-?\d+\.?\d*)$/);
+                if (coordMatch) {
+                    lat = parseFloat(coordMatch[1]);
+                    lon = parseFloat(coordMatch[2]);
+                } else {
+                    // If not coordinates, try to search for the location
+                    showError('Please select a location from the dropdown or enter valid coordinates (latitude, longitude)');
+                    return;
+                }
+                
+                // Validate coordinate ranges
+                if (lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+                    showError('Coordinates are out of valid range. Latitude: -90 to 90, Longitude: -180 to 180');
+                    return;
+                }
+
+                await performAnalysis(lat, lon, startDate, endDate);
+            });
+        }
+
+        async function searchLocations(query) {
+            const loadingElement = document.getElementById('locationLoading');
+            
+            try {
+                // Show loading
+                locationSuggestions.innerHTML = '';
+                loadingElement.style.display = 'block';
+                locationSuggestions.style.display = 'block';
+                
+                const response = await fetch(`/api/locations/search?query=${encodeURIComponent(query)}&type=${currentSearchType}&limit=8`);
+                const data = await response.json();
+                
+                // Hide loading
+                loadingElement.style.display = 'none';
+                
+                if (response.ok) {
+                    displayLocationSuggestions(data.results);
+                } else {
+                    console.error('Location search error:', data.error);
+                    displayLocationSuggestions([]);
+                }
+            } catch (error) {
+                // Hide loading on error
+                loadingElement.style.display = 'none';
+                console.error('Error searching locations:', error);
+                displayLocationSuggestions([]);
+            }
+        }
+
+        function displayLocationSuggestions(locations) {
+            locationSuggestions.innerHTML = '';
+            
+            if (locations.length === 0) {
+                locationSuggestions.style.display = 'none';
+                return;
+            }
+
+            locations.forEach(location => {
+                const div = document.createElement('div');
+                div.className = 'location-suggestion';
+                
+                // Determine icon type based on location type or name
+                let iconClass = 'city';
+                if (location.type === 'agricultural' || location.name.toLowerCase().includes('valley') || 
+                    location.name.toLowerCase().includes('plains') || location.name.toLowerCase().includes('farm')) {
+                    iconClass = 'agricultural';
+                } else if (location.type === 'town' || location.name.toLowerCase().includes('town')) {
+                    iconClass = 'town';
+                } else if (location.type === 'village' || location.name.toLowerCase().includes('village')) {
+                    iconClass = 'village';
+                }
+
+                // Choose appropriate icon
+                let iconSymbol = 'fa-city';
+                if (iconClass === 'agricultural') iconSymbol = 'fa-seedling';
+                else if (iconClass === 'town') iconSymbol = 'fa-home';
+                else if (iconClass === 'village') iconSymbol = 'fa-house';
+
+                div.innerHTML = `
+                    <div class="suggestion-icon ${iconClass}">
+                        <i class="fas ${iconSymbol}"></i>
+                    </div>
+                    <div class="suggestion-content">
+                        <div class="suggestion-title">${location.name}</div>
+                        <div class="suggestion-details">
+                            <div>${location.city}${location.region && location.region !== location.city ? ', ' + location.region : ''}</div>
+                            <div class="suggestion-coords">${location.lat.toFixed(4)}°, ${location.lon.toFixed(4)}°</div>
+                            ${location.type ? `<span class="suggestion-type">${location.type}</span>` : ''}
+                        </div>
+                    </div>
+                `;
+                
+                div.addEventListener('click', () => {
+                    // Set coordinates in the input
+                    locationInput.value = `${location.lat}, ${location.lon}`;
+                    locationSuggestions.style.display = 'none';
+                    
+                    // Store location name for display
+                    locationInput.setAttribute('data-location-name', location.name);
+                    locationInput.setAttribute('data-city', location.city);
+                    locationInput.setAttribute('data-country', location.country);
+                    locationInput.setAttribute('data-region', location.region);
+                    
+                    // Visual feedback
+                    div.style.background = 'var(--primary-color)';
+                    div.style.color = 'white';
+                    setTimeout(() => {
+                        if (div.parentNode) {
+                            div.style.background = '';
+                            div.style.color = '';
+                        }
+                    }, 200);
+                });
+                
+                locationSuggestions.appendChild(div);
+            });
+
+            locationSuggestions.style.display = 'block';
+        }
+
+        async function performAnalysis(lat, lon, startDate, endDate) {
+            const loading = document.getElementById('loading');
+            const results = document.getElementById('results');
+            const error = document.getElementById('errorMessage');
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            
+            // Show loading state
+            showLoading(true);
+            hideError();
+            hideResults();
+            
+            analyzeBtn.classList.add('loading');
+            analyzeBtn.disabled = true;
+
+            try {
+                const params = new URLSearchParams({
+                    lat: lat,
+                    lon: lon,
+                    startDate: startDate,
+                    endDate: endDate
+                });
+
+                console.log('Making API request with params:', params.toString());
+                const response = await fetch(`/api/soil/analysis?${params}`);
+                const data = await response.json();
+
+                console.log('API response received:', data);
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Analysis failed');
+                }
+
+                // Validate data structure before processing
+                if (!data.soilAnalysis) {
+                    console.warn('No soilAnalysis data in response:', data);
+                    throw new Error('Invalid analysis data received');
+                }
+
+                displayResults(data);
+                showSuccess('Analysis completed successfully!');
+                
+            } catch (err) {
+                console.error('Analysis error:', err);
+                showError(`Analysis failed: ${err.message}`);
+            } finally {
+                showLoading(false);
+                analyzeBtn.classList.remove('loading');
+                analyzeBtn.disabled = false;
+            }
+        }
+
+        function displayResults(data) {
+            try {
+                // Validate data structure
+                if (!data || typeof data !== 'object') {
+                    throw new Error('Invalid data received from server');
+                }
+
+                // Update location information
+                if (data.location) {
+                    updateLocationInfo(data.location);
+                } else {
+                    console.warn('No location data in response');
+                }
+                
+                // Update metadata
+                if (data.metadata || data.sentinelData) {
+                    updateAnalysisMetadata(data);
+                } else {
+                    console.warn('No metadata in response');
+                }
+                
+                // Update soil metrics with validation
+                if (data.soilAnalysis) {
+                    console.log('Updating soil metrics with:', data.soilAnalysis);
+                    updateSoilMetrics(data.soilAnalysis);
+                } else {
+                    console.error('No soil analysis data available');
+                    showError('Soil analysis data is not available');
+                    return;
+                }
+                
+                // Update recommendations
+                if (data.soilAnalysis && data.soilAnalysis.recommendations) {
+                    displayRecommendations(data.soilAnalysis.recommendations);
+                } else {
+                    console.warn('No recommendations data available');
+                    // Show empty recommendations section
+                    displayRecommendations([]);
+                }
+
+                // Show results with animation
+                showResults();
+                
+                // Scroll to results
+                setTimeout(() => {
+                    const resultsElement = document.getElementById('results');
+                    if (resultsElement) {
+                        resultsElement.scrollIntoView({ 
+                            behavior: 'smooth', 
+                            block: 'start' 
+                        });
+                    }
+                }, 300);
+                
+            } catch (err) {
+                console.error('Error displaying results:', err);
+                showError(`Failed to display results: ${err.message}`);
+            }
+        }
+
+        function updateLocationInfo(location) {
+            const locationName = document.getElementById('locationName');
+            const locationDescription = document.getElementById('locationDescription');
+            
+            // Check if we have stored location data from the search
+            const locationInput = document.getElementById('location');
+            const storedName = locationInput.getAttribute('data-location-name');
+            const storedCity = locationInput.getAttribute('data-city');
+            const storedCountry = locationInput.getAttribute('data-country');
+            const storedRegion = locationInput.getAttribute('data-region');
+            
+            if (storedName && storedCity) {
+                // Use stored location data from the search
+                locationName.textContent = storedName;
+                locationDescription.textContent = `${location.lat.toFixed(4)}, ${location.lon.toFixed(4)} • ${storedRegion || 'Unknown Region'}`;
+            } else {
+                // Fallback to server data or default
+                locationName.textContent = `${location.city || 'Unknown Location'}, ${location.country || 'Unknown'}`;
+                locationDescription.textContent = `${location.lat.toFixed(4)}, ${location.lon.toFixed(4)} • ${location.region || 'Unknown Region'}`;
+            }
+        }
+
+        function updateAnalysisMetadata(data) {
+            const analysisDate = new Date(data.metadata.analysisDate);
+            document.getElementById('analysisDate').textContent = analysisDate.toLocaleDateString();
+            document.getElementById('sceneCount').textContent = `${data.sentinelData.scenes} scenes analyzed`;
+            document.getElementById('cloudCoverMeta').textContent = `${data.sentinelData.cloudCover}% cloud cover`;
+        }
+
+        function updateSoilMetrics(analysis) {
+            // Helper function to safely convert to uppercase
+            const safeToUpperCase = (value) => {
+                return (value && typeof value === 'string') ? value.replace('_', ' ').toUpperCase() : 'N/A';
+            };
+
+            // Moisture data
+            if (analysis.moisture) {
+                updateMetric('moistureLevel', safeToUpperCase(analysis.moisture.level));
+                updateMetric('moisturePercentage', `${analysis.moisture.percentage || 0}%`);
+                updateProgress('moistureProgress', analysis.moisture.percentage || 0);
+                updateMetric('ndmiValue', analysis.moisture.ndmiValue || 'N/A');
+            }
+
+            // Vegetation data
+            const ndvi = analysis.ndvi || 0;
+            updateMetric('ndviValue', ndvi.toFixed(3));
+            updateProgress('ndviProgress', ((ndvi + 1) / 2) * 100);
+            updateMetric('vegetationHealth', getVegetationHealth(ndvi));
+
+            // Soil composition
+            if (analysis.composition) {
+                const composition = analysis.composition;
+                updateMetric('clayContent', `${(composition.clay || 0).toFixed(1)}%`);
+                updateMetric('sandContent', `${(composition.sand || 0).toFixed(1)}%`);
+                updateMetric('siltContent', `${(composition.silt || 0).toFixed(1)}%`);
+                updateMetric('soilType', composition.soilType || 'Unknown');
+
+                // pH and organic matter
+                updateMetric('phLevel', (composition.ph || 0).toFixed(1));
+                updateMetric('organicMatter', `${(composition.organicMatter || 0).toFixed(1)}%`);
+
+                // Fertility (safely handle nested objects)
+                if (composition.fertility) {
+                    updateMetric('fertilityScore', `${composition.fertility.score || 0}/100`);
+                    updateProgress('fertilityProgress', composition.fertility.score || 0);
+                    updateMetric('fertilityLevel', safeToUpperCase(composition.fertility.level));
+                }
+            }
+
+            // Temperature and environment
+            if (analysis.temperature) {
+                updateMetric('soilTemp', `${analysis.temperature.celsius || 0}°C`);
+            }
+
+            // Data quality
+            updateMetric('confidence', safeToUpperCase(analysis.confidence));
+            updateMetric('cloudCover', `${analysis.cloudCover || 'N/A'}%`);
+            updateMetric('dataSource', 'Sentinel-2');
+        }
+
+        function updateMetric(id, value) {
+            const element = document.getElementById(id);
+            if (element) {
+                element.textContent = value;
+                element.style.opacity = '0';
+                setTimeout(() => {
+                    element.style.opacity = '1';
+                }, 100);
+            }
+        }
+
+        function updateProgress(id, percentage) {
+            const element = document.getElementById(id);
+            if (element) {
+                setTimeout(() => {
+                    element.style.width = `${Math.min(100, Math.max(0, percentage))}%`;
+                }, 200);
+            }
+        }
+
+        function displayRecommendations(recommendations) {
+            const container = document.getElementById('recommendationsList');
+            container.innerHTML = '';
+
+            if (recommendations.length === 0) {
+                container.innerHTML = `
+                    <div class="recommendation low-priority">
+                        <div class="recommendation-header">
+                            <span class="recommendation-type">All Clear</span>
+                            <span class="priority-badge low">Optimal</span>
+                        </div>
+                        <div class="recommendation-message">
+                            No specific recommendations at this time. Soil conditions appear optimal for most agricultural activities.
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            recommendations.forEach(rec => {
+                const div = document.createElement('div');
+                div.className = `recommendation ${rec.priority}-priority`;
+                div.innerHTML = `
+                    <div class="recommendation-header">
+                        <span class="recommendation-type">${rec.type.replace('_', ' ')}</span>
+                        <span class="priority-badge ${rec.priority}">${rec.priority}</span>
+                    </div>
+                    <div class="recommendation-message">${rec.message}</div>
+                    <div class="recommendation-action"><strong>Action:</strong> ${rec.action}</div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function getVegetationHealth(ndvi) {
+            if (ndvi < 0.1) return 'Very Poor';
+            if (ndvi < 0.3) return 'Poor';
+            if (ndvi < 0.5) return 'Moderate';
+            if (ndvi < 0.7) return 'Good';
+            return 'Excellent';
+        }
+
+        // UI Helper functions
+        function showLoading(show) {
+            const loading = document.getElementById('loading');
+            loading.style.display = show ? 'block' : 'none';
+        }
+
+        function showResults() {
+            const results = document.getElementById('results');
+            results.style.display = 'block';
+        }
+
+        function hideResults() {
+            const results = document.getElementById('results');
+            results.style.display = 'none';
+        }
+
+        function showError(message) {
+            const error = document.getElementById('errorMessage');
+            const span = error.querySelector('span');
+            span.textContent = message;
+            error.style.display = 'flex';
+            
+            setTimeout(() => {
+                hideError();
+            }, 8000);
+        }
+
+        function hideError() {
+            const error = document.getElementById('errorMessage');
+            error.style.display = 'none';
+        }
+
+        function showSuccess(message) {
+            // Create a temporary success message
+            const successDiv = document.createElement('div');
+            successDiv.className = 'alert success';
+            successDiv.style.display = 'flex';
+            successDiv.innerHTML = `
+                <i class="fas fa-check-circle"></i>
+                <span>${message}</span>
+            `;
+            
+            // Find the container and insert the success message after the search card
+            const container = document.querySelector('.container');
+            const searchCard = document.querySelector('.search-card');
+            
+            if (container && searchCard) {
+                // Insert after the search card
+                if (searchCard.nextElementSibling) {
+                    container.insertBefore(successDiv, searchCard.nextElementSibling);
+                } else {
+                    container.appendChild(successDiv);
+                }
+            } else {
+                // Fallback: just add to the container
+                if (container) {
+                    container.appendChild(successDiv);
+                }
+            }
+            
+            setTimeout(() => {
+                if (successDiv.parentNode) {
+                    successDiv.remove();
+                }
+            }, 4000);
+        }
+
+        // API health check and status updates
+        async function checkAPIStatus() {
+            const statusIndicator = document.getElementById('statusIndicator');
+            const statusText = document.getElementById('statusText');
+            
+            try {
+                const response = await fetch('/api/health');
+                const data = await response.json();
+                
+                if (data.status === 'OK') {
+                    statusIndicator.classList.remove('offline');
+                    statusText.textContent = 'System Online';
+                } else {
+                    statusIndicator.classList.add('offline');
+                    statusText.textContent = 'System Issues';
+                }
+            } catch (error) {
+                statusIndicator.classList.add('offline');
+                statusText.textContent = 'API Offline';
+                console.warn('API health check failed:', error);
+            }
+        }
+
+        // Check API status every 30 seconds
+        setInterval(checkAPIStatus, 30000);
+    </script>
+</body>
+</html>
