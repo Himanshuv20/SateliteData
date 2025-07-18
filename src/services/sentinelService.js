@@ -317,6 +317,22 @@ class SentinelService {
         const seasonFactor = Math.cos((month - 5) * Math.PI / 6); // Peak in summer
         const latitudeFactor = Math.cos(lat * Math.PI / 180); // Tropical vs temperate
         
+        // Create more varied moisture conditions based on location
+        const moistureVariation = Math.random(); // 0-1 for different moisture scenarios
+        let moistureMultiplier = 1.0;
+        
+        // Simulate different regional moisture conditions
+        if (Math.abs(lat) > 40) {
+            // Temperate regions - more variable
+            moistureMultiplier = 0.7 + moistureVariation * 0.6; // 0.7-1.3
+        } else if (Math.abs(lat) < 23.5) {
+            // Tropical regions - generally more humid but can vary
+            moistureMultiplier = 0.8 + moistureVariation * 0.5; // 0.8-1.3
+        } else {
+            // Subtropical - most variable
+            moistureMultiplier = 0.5 + moistureVariation * 0.8; // 0.5-1.3
+        }
+        
         // Base reflectance values with seasonal and geographic variations
         const baseValues = {
             B02: 0.08 + Math.random() * 0.04, // Blue
@@ -325,11 +341,11 @@ class SentinelService {
             B05: 0.15 + Math.random() * 0.05, // Red Edge 1
             B06: 0.18 + Math.random() * 0.05, // Red Edge 2
             B07: 0.20 + Math.random() * 0.05, // Red Edge 3
-            B08: 0.25 + Math.random() * 0.10, // NIR
-            B8A: 0.24 + Math.random() * 0.08, // NIR Narrow
+            B08: 0.20 + Math.random() * 0.12, // NIR - increased variation
+            B8A: 0.19 + Math.random() * 0.10, // NIR Narrow
             B09: 0.05 + Math.random() * 0.02, // Water Vapour
-            B11: 0.20 + Math.random() * 0.08, // SWIR 1
-            B12: 0.15 + Math.random() * 0.06  // SWIR 2
+            B11: 0.15 + Math.random() * 0.10, // SWIR 1 - key for moisture
+            B12: 0.12 + Math.random() * 0.08  // SWIR 2 - key for moisture
         };
 
         // Apply seasonal and latitude adjustments
@@ -339,12 +355,14 @@ class SentinelService {
                 baseValues[band] *= (1 + seasonFactor * latitudeFactor * 0.3);
             }
             if (['B11', 'B12'].includes(band)) {
-                // SWIR bands affected by moisture content
-                baseValues[band] *= (1 - seasonFactor * latitudeFactor * 0.2);
+                // SWIR bands strongly affected by moisture content
+                baseValues[band] *= moistureMultiplier;
+                // Additional seasonal effect for SWIR
+                baseValues[band] *= (1 - seasonFactor * latitudeFactor * 0.15);
             }
             
             // Normalize to reasonable ranges
-            baseValues[band] = Math.max(0, Math.min(1, baseValues[band]));
+            baseValues[band] = Math.max(0.01, Math.min(0.8, baseValues[band]));
         });
 
         return baseValues;

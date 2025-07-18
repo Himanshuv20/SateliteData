@@ -6,6 +6,11 @@
     <title>Sentinel Soil Analysis Platform</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Leaflet Map CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <!-- Select2 for enhanced dropdowns -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <style>
         :root {
             --primary-color: #2563eb;
@@ -170,10 +175,142 @@
         }
 
         .search-form {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .location-input-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .location-method-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .location-tab {
+            padding: 0.75rem 1.5rem;
+            border: 2px solid var(--border-color);
+            background: var(--surface);
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            flex: 1;
+            justify-content: center;
+        }
+
+        .location-tab:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .location-tab.active {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+        }
+
+        .location-input-method {
+            display: none;
+        }
+
+        .location-input-method.active {
+            display: block;
+        }
+
+        .dropdown-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .dropdown-row {
             display: grid;
-            grid-template-columns: 2fr 1fr 1fr auto;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .map-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .map-container {
+            height: 400px;
+            width: 100%;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .map-instructions {
+            background: rgba(37, 99, 235, 0.1);
+            border: 1px solid rgba(37, 99, 235, 0.2);
+            border-radius: 8px;
+            padding: 1rem;
+            font-size: 0.875rem;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .coordinates-display {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .coordinate-input {
+            padding: 0.75rem;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 0.875rem;
+            background: var(--surface);
+            font-weight: 500;
+            text-align: center;
+        }
+
+        .coordinate-input.has-value {
+            border-color: var(--success-color);
+            background: rgba(34, 197, 94, 0.1);
+        }
+
+        .dates-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
             gap: 1.5rem;
             align-items: end;
+        }
+
+        /* Select2 customization */
+        .select2-container--default .select2-selection--single {
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            height: 50px;
+            padding: 0.875rem 1rem;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            padding: 0;
+            line-height: 32px;
+        }
+
+        .select2-container--default.select2-container--focus .select2-selection--single {
+            border-color: var(--primary-color);
         }
 
         .form-group {
@@ -677,70 +814,268 @@
         }
 
         .recommendation {
-            background: var(--background);
+            background: var(--surface);
             padding: 1.5rem;
-            border-radius: 8px;
+            border-radius: 12px;
             margin-bottom: 1rem;
-            border-left: 4px solid var(--primary-color);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow);
             transition: var(--transition);
+            overflow: hidden;
         }
 
         .recommendation:hover {
-            transform: translateX(4px);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .recommendation.critical-priority {
+            border-left: 4px solid #dc2626;
+            background: linear-gradient(135deg, #fef2f2 0%, #ffffff 100%);
         }
 
         .recommendation.high-priority {
-            border-left-color: var(--danger-color);
-            background: #fef2f2;
+            border-left: 4px solid var(--danger-color);
+            background: linear-gradient(135deg, #fef2f2 0%, #ffffff 100%);
         }
 
         .recommendation.medium-priority {
-            border-left-color: var(--warning-color);
-            background: #fffbeb;
+            border-left: 4px solid var(--warning-color);
+            background: linear-gradient(135deg, #fffbeb 0%, #ffffff 100%);
         }
 
         .recommendation.low-priority {
-            border-left-color: var(--success-color);
-            background: #f0fdf4;
+            border-left: 4px solid var(--success-color);
+            background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%);
+        }
+
+        .recommendation.optimal {
+            border-left: 4px solid var(--secondary-color);
+            background: linear-gradient(135deg, #ecfdf5 0%, #ffffff 100%);
+        }
+
+        .recommendation-category {
+            margin-bottom: 2rem;
+        }
+
+        .category-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            color: white;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+        }
+
+        .category-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin: 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .category-title i {
+            font-size: 1.2rem;
+        }
+
+        .category-count {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .category-content {
+            margin-left: 1rem;
         }
 
         .recommendation-header {
             display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .recommendation-icon {
+            flex-shrink: 0;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
             align-items: center;
-            justify-content: between;
-            margin-bottom: 0.75rem;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .critical-priority .recommendation-icon {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            color: white;
+        }
+
+        .high-priority .recommendation-icon {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+        }
+
+        .medium-priority .recommendation-icon {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+        }
+
+        .low-priority .recommendation-icon {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+
+        .optimal .recommendation-icon {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: white;
+        }
+
+        .recommendation-title {
+            flex: 1;
         }
 
         .recommendation-type {
             font-weight: 600;
-            text-transform: uppercase;
-            font-size: 0.875rem;
-            letter-spacing: 0.05em;
+            font-size: 1.1rem;
+            color: var(--text-primary);
+            display: block;
+            margin-bottom: 0.5rem;
         }
 
-        .priority-badge {
+        .recommendation-badges {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .priority-badge, .severity-badge {
             padding: 0.25rem 0.75rem;
             border-radius: 1rem;
-            font-size: 0.75rem;
-            font-weight: 500;
+            font-size: 0.7rem;
+            font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.05em;
-            margin-left: auto;
         }
 
+        .priority-badge.critical { background: #fecaca; color: #991b1b; }
         .priority-badge.high { background: #fecaca; color: #dc2626; }
         .priority-badge.medium { background: #fed7aa; color: #ea580c; }
         .priority-badge.low { background: #bbf7d0; color: #16a34a; }
+        .priority-badge.optimal { background: #d1fae5; color: #065f46; }
+
+        .severity-badge.high { background: #fee2e2; color: #991b1b; }
+        .severity-badge.medium { background: #fef3c7; color: #92400e; }
+        .severity-badge.low { background: #e0f2fe; color: #0369a1; }
+
+        .recommendation-content {
+            line-height: 1.6;
+        }
 
         .recommendation-message {
-            margin-bottom: 0.5rem;
-            line-height: 1.5;
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+            color: var(--text-primary);
         }
 
         .recommendation-action {
-            font-style: italic;
+            background: #f8fafc;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border-left: 3px solid var(--primary-color);
+        }
+
+        .recommendation-action strong {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .recommendation-action p {
+            margin: 0;
+            color: var(--text-primary);
+        }
+
+        .recommendation-details {
+            background: #f1f5f9;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border-left: 3px solid var(--secondary-color);
+        }
+
+        .recommendation-details strong {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--secondary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .recommendation-details p {
+            margin: 0;
+            color: var(--text-primary);
+        }
+
+        .recommendation-metadata {
+            background: #fafafa;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .metadata-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 0.75rem;
+        }
+
+        .metadata-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+        }
+
+        .metadata-item i {
+            color: var(--primary-color);
+            width: 16px;
+        }
+
+        .metadata-label {
+            font-weight: 500;
             color: var(--text-secondary);
-            font-size: 0.875rem;
+        }
+
+        .metadata-value {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .metadata-value.cost-low { color: #16a34a; }
+        .metadata-value.cost-medium { color: #ea580c; }
+        .metadata-value.cost-high { color: #dc2626; }
+
+        .seasonal-advice {
+            grid-column: 1 / -1;
+            background: #eff6ff;
+            padding: 0.75rem;
+            border-radius: 6px;
+            border: 1px solid #bfdbfe;
+        }
+
+        .seasonal-advice .metadata-value {
+            font-style: italic;
         }
 
         @media (max-width: 768px) {
@@ -829,63 +1164,135 @@
             </div>
             
             <form class="search-form" id="analysisForm">
-                <div class="form-group">
-                    <label class="form-label" for="location">
-                        <i class="fas fa-map-marker-alt"></i>
-                        Location
-                    </label>
-                    <div class="location-input-container">
-                        <input 
-                            type="text" 
-                            id="location" 
-                            class="form-input"
-                            placeholder="Enter city name (e.g., New York) or coordinates (lat, lon)" 
-                            required
-                            autocomplete="off"
-                        >
-                        <div class="location-suggestions" id="locationSuggestions">
-                            <div class="location-search-loading" id="locationLoading">
-                                <i class="fas fa-spinner fa-spin"></i>
-                                Searching locations...
+                <!-- Location Input Section -->
+                <div class="location-input-section">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-map-marker-alt"></i>
+                            Choose Location Method
+                        </label>
+                        <div class="location-method-tabs">
+                            <button type="button" class="location-tab active" data-method="dropdown">
+                                <i class="fas fa-list"></i>
+                                Select from List
+                            </button>
+                            <button type="button" class="location-tab" data-method="map">
+                                <i class="fas fa-map"></i>
+                                Choose on Map
+                            </button>
+                            <button type="button" class="location-tab" data-method="manual">
+                                <i class="fas fa-keyboard"></i>
+                                Enter Manually
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Dropdown Method -->
+                    <div class="location-input-method active" id="dropdown-method">
+                        <div class="dropdown-section">
+                            <div class="dropdown-row">
+                                <div class="form-group">
+                                    <label class="form-label" for="countrySelect">
+                                        <i class="fas fa-globe"></i>
+                                        Country/Region
+                                    </label>
+                                    <select id="countrySelect" class="form-input" style="width: 100%">
+                                        <option value="">Select Country</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="locationSelect">
+                                        <i class="fas fa-city"></i>
+                                        Location
+                                    </label>
+                                    <select id="locationSelect" class="form-input" style="width: 100%" disabled>
+                                        <option value="">Select Location</option>
+                                    </select>
+                                </div>
                             </div>
                         </div>
-                        <div class="location-type-selector">
-                            <button type="button" class="location-type-btn active" data-type="all">
-                                <i class="fas fa-globe"></i> All
-                            </button>
-                            <button type="button" class="location-type-btn" data-type="agricultural">
-                                <i class="fas fa-seedling"></i> Agricultural
-                            </button>
+                    </div>
+
+                    <!-- Map Method -->
+                    <div class="location-input-method" id="map-method">
+                        <div class="map-section">
+                            <div class="map-instructions">
+                                <i class="fas fa-info-circle"></i>
+                                Click on the map to select your location for soil analysis
+                            </div>
+                            <div class="map-container" id="mapContainer">
+                                <!-- Map will be initialized here -->
+                            </div>
+                            <div class="coordinates-display">
+                                <input type="text" class="coordinate-input" id="selectedLat" placeholder="Latitude" readonly>
+                                <input type="text" class="coordinate-input" id="selectedLon" placeholder="Longitude" readonly>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Manual Method -->
+                    <div class="location-input-method" id="manual-method">
+                        <div class="location-input-container">
+                            <input 
+                                type="text" 
+                                id="location" 
+                                class="form-input"
+                                placeholder="Enter city name (e.g., New York) or coordinates (lat, lon)" 
+                                required
+                                autocomplete="off"
+                            >
+                            <div class="location-suggestions" id="locationSuggestions">
+                                <div class="location-search-loading" id="locationLoading">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                    Searching locations...
+                                </div>
+                            </div>
+                            <div class="location-type-selector">
+                                <button type="button" class="location-type-btn active" data-type="all">
+                                    <i class="fas fa-globe"></i> All
+                                </button>
+                                <button type="button" class="location-type-btn" data-type="agricultural">
+                                    <i class="fas fa-seedling"></i> Agricultural
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
                 
-                <div class="form-group">
-                    <label class="form-label" for="startDate">
-                        <i class="fas fa-calendar-alt"></i>
-                        Start Date
-                    </label>
-                    <input type="date" id="startDate" class="form-input">
+                <!-- Date Selection -->
+                <div class="dates-row">
+                    <div class="form-group">
+                        <label class="form-label" for="startDate">
+                            <i class="fas fa-calendar-alt"></i>
+                            Start Date
+                        </label>
+                        <input type="date" id="startDate" class="form-input">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="endDate">
+                            <i class="fas fa-calendar-check"></i>
+                            End Date
+                        </label>
+                        <input type="date" id="endDate" class="form-input">
+                    </div>
+                    
+                    <button type="submit" class="analyze-btn" id="analyzeBtn">
+                        <span class="btn-text">
+                            <i class="fas fa-microscope"></i>
+                            Analyze Soil
+                        </span>
+                        <span class="loading-dots">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            Analyzing...
+                        </span>
+                    </button>
+                    
+                    <!-- Debug button for testing -->
+                    <button type="button" id="debugBtn" style="margin-left: 10px; padding: 10px; background: red; color: white; border: none; border-radius: 5px;">
+                        Debug Test
+                    </button>
                 </div>
-                
-                <div class="form-group">
-                    <label class="form-label" for="endDate">
-                        <i class="fas fa-calendar-check"></i>
-                        End Date
-                    </label>
-                    <input type="date" id="endDate" class="form-input">
-                </div>
-                
-                <button type="submit" class="analyze-btn" id="analyzeBtn">
-                    <span class="btn-text">
-                        <i class="fas fa-microscope"></i>
-                        Analyze Soil
-                    </span>
-                    <span class="loading-dots">
-                        <i class="fas fa-spinner fa-spin"></i>
-                        Analyzing...
-                    </span>
-                </button>
             </form>
 
             <div class="quick-locations">
@@ -1122,16 +1529,349 @@
         </div>
     </div>
 
+    <!-- JavaScript Libraries -->
+    <!-- jQuery (required for Select2) -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- Select2 for enhanced dropdowns -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <!-- Leaflet Map -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" 
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
     <script>
-        // Initialize the application
-        document.addEventListener('DOMContentLoaded', function() {
+        // Location Data for Dropdown
+        const locationData = {
+            "United States": {
+                "California - Central Valley": { lat: 36.7378, lon: -119.7871, type: "agricultural" },
+                "Iowa - Corn Belt": { lat: 42.0308, lon: -93.5810, type: "agricultural" },
+                "Nebraska - Great Plains": { lat: 41.4925, lon: -99.9018, type: "agricultural" },
+                "Texas - High Plains": { lat: 34.5203, lon: -102.3471, type: "agricultural" },
+                "Illinois - Prairie": { lat: 40.3497, lon: -88.9864, type: "agricultural" },
+                "New York City": { lat: 40.7128, lon: -74.0060, type: "urban" },
+                "Los Angeles": { lat: 34.0522, lon: -118.2437, type: "urban" },
+                "Chicago": { lat: 41.8781, lon: -87.6298, type: "urban" }
+            },
+            "India": {
+                "Punjab - Agricultural Region": { lat: 30.9010, lon: 75.8573, type: "agricultural" },
+                "Haryana - Wheat Belt": { lat: 29.0588, lon: 76.0856, type: "agricultural" },
+                "Uttar Pradesh - Gangetic Plain": { lat: 26.8467, lon: 80.9462, type: "agricultural" },
+                "Maharashtra - Deccan Plateau": { lat: 19.7515, lon: 75.7139, type: "agricultural" },
+                "Karnataka - Mysore Plateau": { lat: 12.2958, lon: 76.6394, type: "agricultural" },
+                "Mumbai": { lat: 19.0760, lon: 72.8777, type: "urban" },
+                "Delhi": { lat: 28.7041, lon: 77.1025, type: "urban" },
+                "Bangalore": { lat: 12.9716, lon: 77.5946, type: "urban" }
+            },
+            "Brazil": {
+                "Mato Grosso - Soy Region": { lat: -15.6014, lon: -56.0979, type: "agricultural" },
+                "Rio Grande do Sul - Pampas": { lat: -30.0346, lon: -51.2177, type: "agricultural" },
+                "Cerrado - Agricultural Frontier": { lat: -15.7942, lon: -47.8822, type: "agricultural" },
+                "São Paulo": { lat: -23.5505, lon: -46.6333, type: "urban" },
+                "Rio de Janeiro": { lat: -22.9068, lon: -43.1729, type: "urban" }
+            },
+            "European Union": {
+                "Po Valley, Italy": { lat: 45.4642, lon: 9.1900, type: "agricultural" },
+                "Champagne, France": { lat: 49.0431, lon: 4.0221, type: "agricultural" },
+                "Lower Saxony, Germany": { lat: 52.6367, lon: 9.8451, type: "agricultural" },
+                "Andalusia, Spain": { lat: 37.3886, lon: -5.9823, type: "agricultural" },
+                "Wielkopolska, Poland": { lat: 52.4064, lon: 16.9252, type: "agricultural" },
+                "Paris, France": { lat: 48.8566, lon: 2.3522, type: "urban" },
+                "Berlin, Germany": { lat: 52.5200, lon: 13.4050, type: "urban" },
+                "Rome, Italy": { lat: 41.9028, lon: 12.4964, type: "urban" }
+            },
+            "Australia": {
+                "Murray-Darling Basin": { lat: -34.5028, lon: 142.0181, type: "agricultural" },
+                "Wheat Belt, Western Australia": { lat: -31.0000, lon: 117.0000, type: "agricultural" },
+                "Darling Downs, Queensland": { lat: -27.5598, lon: 151.9507, type: "agricultural" },
+                "Sydney": { lat: -33.8688, lon: 151.2093, type: "urban" },
+                "Melbourne": { lat: -37.8136, lon: 144.9631, type: "urban" }
+            },
+            "Argentina": {
+                "Pampas - Buenos Aires": { lat: -36.1612, lon: -59.8447, type: "agricultural" },
+                "Córdoba - Soy Region": { lat: -31.4201, lon: -64.1888, type: "agricultural" },
+                "Buenos Aires": { lat: -34.6118, lon: -58.3960, type: "urban" }
+            },
+            "Canada": {
+                "Prairie Provinces - Saskatchewan": { lat: 52.9399, lon: -106.4509, type: "agricultural" },
+                "Alberta - Canola Region": { lat: 53.9333, lon: -116.5765, type: "agricultural" },
+                "Ontario - Corn Belt": { lat: 43.6532, lon: -79.3832, type: "agricultural" },
+                "Toronto": { lat: 43.6532, lon: -79.3832, type: "urban" },
+                "Vancouver": { lat: 49.2827, lon: -123.1207, type: "urban" }
+            },
+            "China": {
+                "Northeast Plain - Heilongjiang": { lat: 47.8620, lon: 127.7615, type: "agricultural" },
+                "North China Plain - Henan": { lat: 34.7466, lon: 113.6253, type: "agricultural" },
+                "Yangtze River Delta": { lat: 31.2304, lon: 121.4737, type: "agricultural" },
+                "Beijing": { lat: 39.9042, lon: 116.4074, type: "urban" },
+                "Shanghai": { lat: 31.2304, lon: 121.4737, type: "urban" }
+            }
+        };
+
+        // Global variables for map and location selection
+        let map = null;
+        let selectedMarker = null;
+        let selectedCoordinates = null;
+
+        // Document ready initialization
+        $(document).ready(function() {
+            console.log('jQuery ready - initializing...');
+            console.log('jQuery version:', $.fn.jquery);
+            initializeLocationMethods();
             initializeApp();
         });
 
+        // Also use vanilla JS as fallback
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM ready - fallback initialization...');
+            // Only initialize if jQuery didn't already do it
+            if (!window.jQueryInitialized) {
+                initializeApp();
+            }
+        });
+
+        // Initialize the application
         function initializeApp() {
-            setDefaultDates();
-            setupEventListeners();
-            checkAPIStatus();
+            console.log('Initializing app...');
+            window.jQueryInitialized = true;
+            
+            // Add debug button handler first
+            const debugBtn = document.getElementById('debugBtn');
+            if (debugBtn) {
+                debugBtn.addEventListener('click', function() {
+                    console.log('Debug button clicked!');
+                    alert('Debug button works! This confirms JavaScript is running.');
+                    // Test a simple analysis call
+                    performAnalysis(40.7128, -74.0060, '2025-06-18', '2025-07-18');
+                });
+                console.log('Debug button handler added');
+            }
+            
+            // Add direct click handler to analyze button as backup
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            if (analyzeBtn) {
+                analyzeBtn.addEventListener('click', function(e) {
+                    console.log('Analyze button clicked directly!');
+                    e.preventDefault();
+                    
+                    // For now, just use NYC coordinates to test
+                    const lat = 40.7128;
+                    const lon = -74.0060;
+                    const startDate = document.getElementById('startDate').value;
+                    const endDate = document.getElementById('endDate').value;
+                    
+                    console.log('Direct analysis with NYC coordinates:', { lat, lon, startDate, endDate });
+                    performAnalysis(lat, lon, startDate, endDate);
+                });
+                console.log('Direct analyze button handler added');
+            }
+            
+            try {
+                setDefaultDates();
+                setupEventListeners();
+                checkAPIStatus();
+                console.log('App initialization completed successfully');
+            } catch (error) {
+                console.error('Error during app initialization:', error);
+            }
+        }
+
+        // Initialize location input methods
+        function initializeLocationMethods() {
+            setupLocationTabs();
+            setupDropdowns();
+            setupMap();
+        }
+
+        // Setup location method tabs
+        function setupLocationTabs() {
+            $('.location-tab').on('click', function() {
+                const method = $(this).data('method');
+                
+                // Update active tab
+                $('.location-tab').removeClass('active');
+                $(this).addClass('active');
+                
+                // Show corresponding method
+                $('.location-input-method').removeClass('active');
+                $(`#${method}-method`).addClass('active');
+                
+                // Clear previous selections
+                clearLocationSelection();
+            });
+        }
+
+        // Setup dropdown functionality
+        function setupDropdowns() {
+            // Initialize Select2
+            $('#countrySelect, #locationSelect').select2({
+                placeholder: function() {
+                    return $(this).data('placeholder') || 'Select option';
+                },
+                allowClear: true
+            });
+
+            // Populate countries
+            Object.keys(locationData).forEach(country => {
+                $('#countrySelect').append(new Option(country, country));
+            });
+
+            // Country selection handler
+            $('#countrySelect').on('change', function() {
+                const selectedCountry = $(this).val();
+                const locationSelect = $('#locationSelect');
+                
+                // Clear and disable location dropdown
+                locationSelect.empty().append(new Option('Select Location', '')).prop('disabled', true);
+                
+                if (selectedCountry && locationData[selectedCountry]) {
+                    // Populate locations for selected country
+                    Object.keys(locationData[selectedCountry]).forEach(location => {
+                        locationSelect.append(new Option(location, location));
+                    });
+                    locationSelect.prop('disabled', false);
+                }
+                
+                // Trigger Select2 refresh
+                locationSelect.trigger('change');
+            });
+
+            // Location selection handler
+            $('#locationSelect').on('change', function() {
+                const selectedCountry = $('#countrySelect').val();
+                const selectedLocation = $(this).val();
+                
+                if (selectedCountry && selectedLocation && locationData[selectedCountry][selectedLocation]) {
+                    const coords = locationData[selectedCountry][selectedLocation];
+                    selectedCoordinates = { lat: coords.lat, lon: coords.lon };
+                    
+                    // Update any visual indicators if needed
+                    console.log(`Selected: ${selectedLocation}, ${selectedCountry}`, selectedCoordinates);
+                }
+            });
+        }
+
+        // Setup interactive map
+        function setupMap() {
+            // Initialize map
+            map = L.map('mapContainer').setView([20, 0], 2);
+            
+            // Add tile layer
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 18
+            }).addTo(map);
+
+            // Add click handler
+            map.on('click', function(e) {
+                const lat = e.latlng.lat;
+                const lon = e.latlng.lng;
+                
+                // Remove previous marker
+                if (selectedMarker) {
+                    map.removeLayer(selectedMarker);
+                }
+                
+                // Add new marker
+                selectedMarker = L.marker([lat, lon]).addTo(map);
+                
+                // Update coordinates
+                selectedCoordinates = { lat: lat, lon: lon };
+                
+                // Update coordinate display
+                $('#selectedLat').val(lat.toFixed(6)).addClass('has-value');
+                $('#selectedLon').val(lon.toFixed(6)).addClass('has-value');
+                
+                console.log('Map coordinates selected:', selectedCoordinates);
+            });
+
+            // Handle map container visibility
+            const mapContainer = $('#mapContainer');
+            const resizeObserver = new ResizeObserver(() => {
+                if (mapContainer.is(':visible') && map) {
+                    setTimeout(() => map.invalidateSize(), 100);
+                }
+            });
+            resizeObserver.observe(mapContainer[0]);
+        }
+
+        // Clear location selection
+        function clearLocationSelection() {
+            selectedCoordinates = null;
+            
+            // Clear dropdowns
+            $('#countrySelect, #locationSelect').val('').trigger('change');
+            $('#locationSelect').prop('disabled', true);
+            
+            // Clear map selection
+            if (selectedMarker && map) {
+                map.removeLayer(selectedMarker);
+                selectedMarker = null;
+            }
+            $('#selectedLat, #selectedLon').val('').removeClass('has-value');
+            
+            // Clear manual input
+            $('#location').val('');
+        }
+
+        // Get selected coordinates from active method
+        function getSelectedCoordinates() {
+            try {
+                const activeMethod = $('.location-tab.active').data('method');
+                console.log('Active method:', activeMethod);
+                
+                switch (activeMethod) {
+                    case 'dropdown':
+                        console.log('Dropdown method - selectedCoordinates:', selectedCoordinates);
+                        return selectedCoordinates;
+                        
+                    case 'map':
+                        console.log('Map method - selectedCoordinates:', selectedCoordinates);
+                        return selectedCoordinates;
+                        
+                    case 'manual':
+                        const locationValue = $('#location').val() ? $('#location').val().trim() : '';
+                        console.log('Manual method - locationValue:', locationValue);
+                        if (locationValue) {
+                            // Try to parse coordinates
+                            const coords = parseCoordinates(locationValue);
+                            if (coords) {
+                                console.log('Parsed coordinates:', coords);
+                                return { lat: coords.lat, lon: coords.lon };
+                            }
+                            // If not coordinates and has data attributes (from location search)
+                            const lat = $('#location').attr('data-lat');
+                            const lon = $('#location').attr('data-lon');
+                            console.log('Data attributes - lat:', lat, 'lon:', lon);
+                            if (lat && lon) {
+                                return { lat: parseFloat(lat), lon: parseFloat(lon) };
+                            }
+                        }
+                        return null;
+                        
+                    default:
+                        console.log('Unknown method:', activeMethod);
+                        return null;
+                }
+            } catch (error) {
+                console.error('Error in getSelectedCoordinates:', error);
+                return null;
+            }
+        }
+
+        // Parse coordinates from string
+        function parseCoordinates(input) {
+            const coordRegex = /^(-?\d+\.?\d*),?\s*(-?\d+\.?\d*)$/;
+            const match = input.match(coordRegex);
+            
+            if (match) {
+                const lat = parseFloat(match[1]);
+                const lon = parseFloat(match[2]);
+                
+                if (lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180) {
+                    return { lat, lon };
+                }
+            }
+            
+            return null;
         }
 
         // Set default dates
@@ -1145,9 +1885,15 @@
 
         // Setup all event listeners
         function setupEventListeners() {
-            setupLocationSearch();
-            setupQuickLocationChips();
-            setupFormSubmission();
+            console.log('Setting up event listeners...');
+            try {
+                setupLocationSearch();
+                setupQuickLocationChips();
+                setupFormSubmission();
+                console.log('Event listeners setup completed');
+            } catch (error) {
+                console.error('Error setting up event listeners:', error);
+            }
         }
 
         // Location search functionality
@@ -1222,10 +1968,13 @@
                     const coords = this.getAttribute('data-coords');
                     const name = this.getAttribute('data-name');
                     
+                    // Switch to manual method and set coordinates
+                    $('.location-tab[data-method="manual"]').click();
+                    
                     locationInput.value = coords;
                     locationSuggestions.style.display = 'none';
                     
-                    // Store location name for display
+                    // Store location data
                     if (name) {
                         locationInput.setAttribute('data-location-name', name);
                         // Parse name to extract city and country
@@ -1239,6 +1988,13 @@
                         }
                     }
                     
+                    // Store coordinates
+                    if (coords) {
+                        const [lat, lon] = coords.split(',').map(c => c.trim());
+                        locationInput.setAttribute('data-lat', lat);
+                        locationInput.setAttribute('data-lon', lon);
+                    }
+                    
                     // Add visual feedback
                     this.style.transform = 'scale(0.95)';
                     setTimeout(() => {
@@ -1250,25 +2006,67 @@
 
         // Form submission
         function setupFormSubmission() {
-            document.getElementById('analysisForm').addEventListener('submit', async function(e) {
+            const form = document.getElementById('analysisForm');
+            const button = document.getElementById('analyzeBtn');
+            
+            console.log('Form element:', form);
+            console.log('Button element:', button);
+            
+            if (!form) {
+                console.error('Analysis form not found!');
+                return;
+            }
+            
+            if (!button) {
+                console.error('Analyze button not found!');
+                return;
+            }
+            
+            console.log('Setting up form submission...');
+            
+            // Add both form submit and button click handlers for debugging
+            form.addEventListener('submit', handleFormSubmit);
+            button.addEventListener('click', function(e) {
+                console.log('Button clicked directly!');
+                // If form doesn't submit, manually trigger it
+                if (e.target.type === 'submit') {
+                    console.log('Submit button clicked');
+                }
+            });
+            
+            async function handleFormSubmit(e) {
                 e.preventDefault();
+                console.log('Form submitted!');
                 
-                const location = document.getElementById('location').value.trim();
+                // Get coordinates from selected method
+                const coordinates = getSelectedCoordinates();
+                console.log('Selected coordinates:', coordinates);
+                
+                if (!coordinates) {
+                    const activeMethod = $('.location-tab.active').data('method');
+                    let errorMessage = 'Please select a location.';
+                    
+                    switch (activeMethod) {
+                        case 'dropdown':
+                            errorMessage = 'Please select a country and location from the dropdowns.';
+                            break;
+                        case 'map':
+                            errorMessage = 'Please click on the map to select a location.';
+                            break;
+                        case 'manual':
+                            errorMessage = 'Please enter a valid location or coordinates (latitude, longitude).';
+                            break;
+                    }
+                    
+                    showError(errorMessage);
+                    return;
+                }
+                
+                const { lat, lon } = coordinates;
                 const startDate = document.getElementById('startDate').value;
                 const endDate = document.getElementById('endDate').value;
                 
-                let lat, lon;
-                
-                // Check if input is coordinates
-                const coordMatch = location.match(/^(-?\d+\.?\d*),?\s*(-?\d+\.?\d*)$/);
-                if (coordMatch) {
-                    lat = parseFloat(coordMatch[1]);
-                    lon = parseFloat(coordMatch[2]);
-                } else {
-                    // If not coordinates, try to search for the location
-                    showError('Please select a location from the dropdown or enter valid coordinates (latitude, longitude)');
-                    return;
-                }
+                console.log('Analysis parameters:', { lat, lon, startDate, endDate });
                 
                 // Validate coordinate ranges
                 if (lat < -90 || lat > 90 || lon < -180 || lon > 180) {
@@ -1277,7 +2075,7 @@
                 }
 
                 await performAnalysis(lat, lon, startDate, endDate);
-            });
+            }
         }
 
         async function searchLocations(query) {
@@ -1357,11 +2155,13 @@
                     locationInput.value = `${location.lat}, ${location.lon}`;
                     locationSuggestions.style.display = 'none';
                     
-                    // Store location name for display
+                    // Store location data for later use
                     locationInput.setAttribute('data-location-name', location.name);
                     locationInput.setAttribute('data-city', location.city);
                     locationInput.setAttribute('data-country', location.country);
                     locationInput.setAttribute('data-region', location.region);
+                    locationInput.setAttribute('data-lat', location.lat);
+                    locationInput.setAttribute('data-lon', location.lon);
                     
                     // Visual feedback
                     div.style.background = 'var(--primary-color)';
@@ -1423,7 +2223,20 @@
                 
             } catch (err) {
                 console.error('Analysis error:', err);
-                showError(`Analysis failed: ${err.message}`);
+                
+                // Provide more specific error messages
+                let errorMessage = 'Analysis failed';
+                if (err.name === 'TypeError' && err.message.includes('fetch')) {
+                    errorMessage = 'Connection failed. Please check your network and try again.';
+                } else if (err.message.includes('insertBefore')) {
+                    errorMessage = 'Display error occurred. Analysis may have completed successfully.';
+                } else if (err.message) {
+                    errorMessage = `Analysis failed: ${err.message}`;
+                } else {
+                    errorMessage = 'An unexpected error occurred. Please try again.';
+                }
+                
+                showError(errorMessage);
             } finally {
                 showLoading(false);
                 analyzeBtn.classList.remove('loading');
@@ -1476,18 +2289,22 @@
                 
                 // Scroll to results
                 setTimeout(() => {
-                    const resultsElement = document.getElementById('results');
-                    if (resultsElement) {
-                        resultsElement.scrollIntoView({ 
-                            behavior: 'smooth', 
-                            block: 'start' 
-                        });
+                    try {
+                        const resultsElement = document.getElementById('results');
+                        if (resultsElement) {
+                            resultsElement.scrollIntoView({ 
+                                behavior: 'smooth', 
+                                block: 'start' 
+                            });
+                        }
+                    } catch (scrollError) {
+                        console.warn('Error scrolling to results:', scrollError);
                     }
                 }, 300);
                 
-            } catch (err) {
-                console.error('Error displaying results:', err);
-                showError(`Failed to display results: ${err.message}`);
+            } catch (error) {
+                console.error('Error displaying results:', error);
+                showError(`Failed to display results: ${error.message}`);
             }
         }
 
@@ -1597,32 +2414,209 @@
 
             if (recommendations.length === 0) {
                 container.innerHTML = `
-                    <div class="recommendation low-priority">
+                    <div class="recommendation optimal">
                         <div class="recommendation-header">
-                            <span class="recommendation-type">All Clear</span>
-                            <span class="priority-badge low">Optimal</span>
+                            <div class="recommendation-icon">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="recommendation-title">
+                                <span class="recommendation-type">All Clear</span>
+                                <span class="priority-badge optimal">Optimal Conditions</span>
+                            </div>
                         </div>
-                        <div class="recommendation-message">
-                            No specific recommendations at this time. Soil conditions appear optimal for most agricultural activities.
+                        <div class="recommendation-content">
+                            <p class="recommendation-message">
+                                Excellent! Soil conditions appear optimal for most agricultural activities. 
+                                Continue current management practices and monitor regularly.
+                            </p>
                         </div>
                     </div>
                 `;
                 return;
             }
 
-            recommendations.forEach(rec => {
-                const div = document.createElement('div');
-                div.className = `recommendation ${rec.priority}-priority`;
-                div.innerHTML = `
-                    <div class="recommendation-header">
-                        <span class="recommendation-type">${rec.type.replace('_', ' ')}</span>
-                        <span class="priority-badge ${rec.priority}">${rec.priority}</span>
-                    </div>
-                    <div class="recommendation-message">${rec.message}</div>
-                    <div class="recommendation-action"><strong>Action:</strong> ${rec.action}</div>
+            // Group recommendations by category
+            const categorizedRecs = this.categorizeRecommendations(recommendations);
+            
+            // Display each category
+            Object.keys(categorizedRecs).forEach(category => {
+                const categoryDiv = document.createElement('div');
+                categoryDiv.className = 'recommendation-category';
+                
+                const categoryHeader = document.createElement('div');
+                categoryHeader.className = 'category-header';
+                categoryHeader.innerHTML = `
+                    <h3 class="category-title">
+                        <i class="${this.getCategoryIcon(category)}"></i>
+                        ${this.getCategoryTitle(category)}
+                    </h3>
+                    <span class="category-count">${categorizedRecs[category].length} recommendations</span>
                 `;
-                container.appendChild(div);
+                categoryDiv.appendChild(categoryHeader);
+                
+                const categoryContent = document.createElement('div');
+                categoryContent.className = 'category-content';
+                
+                categorizedRecs[category].forEach(rec => {
+                    const recDiv = document.createElement('div');
+                    recDiv.className = `recommendation ${rec.priority}-priority`;
+                    
+                    recDiv.innerHTML = `
+                        <div class="recommendation-header">
+                            <div class="recommendation-icon">
+                                <i class="${this.getRecommendationIcon(rec.type, rec.category)}"></i>
+                            </div>
+                            <div class="recommendation-title">
+                                <span class="recommendation-type">${rec.type}</span>
+                                <div class="recommendation-badges">
+                                    <span class="priority-badge ${rec.priority}">${rec.priority.toUpperCase()}</span>
+                                    <span class="severity-badge ${rec.severity || 'medium'}">${(rec.severity || 'medium').toUpperCase()}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="recommendation-content">
+                            <p class="recommendation-message">${rec.message}</p>
+                            
+                            <div class="recommendation-action">
+                                <strong><i class="fas fa-tasks"></i> Recommended Action:</strong>
+                                <p>${rec.action}</p>
+                            </div>
+                            
+                            ${rec.details ? `
+                                <div class="recommendation-details">
+                                    <strong><i class="fas fa-info-circle"></i> Implementation Details:</strong>
+                                    <p>${rec.details}</p>
+                                </div>
+                            ` : ''}
+                            
+                            <div class="recommendation-metadata">
+                                <div class="metadata-grid">
+                                    ${rec.timeline ? `
+                                        <div class="metadata-item">
+                                            <i class="fas fa-clock"></i>
+                                            <span class="metadata-label">Timeline:</span>
+                                            <span class="metadata-value">${rec.timeline}</span>
+                                        </div>
+                                    ` : ''}
+                                    
+                                    ${rec.cost ? `
+                                        <div class="metadata-item">
+                                            <i class="fas fa-dollar-sign"></i>
+                                            <span class="metadata-label">Cost:</span>
+                                            <span class="metadata-value cost-${rec.cost.toLowerCase()}">${rec.cost}</span>
+                                        </div>
+                                    ` : ''}
+                                    
+                                    ${rec.impact ? `
+                                        <div class="metadata-item">
+                                            <i class="fas fa-chart-line"></i>
+                                            <span class="metadata-label">Expected Impact:</span>
+                                            <span class="metadata-value">${rec.impact}</span>
+                                        </div>
+                                    ` : ''}
+                                    
+                                    ${rec.seasonality ? `
+                                        <div class="metadata-item seasonal-advice">
+                                            <i class="fas fa-calendar-alt"></i>
+                                            <span class="metadata-label">Seasonal Note:</span>
+                                            <span class="metadata-value">${rec.seasonality}</span>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    categoryContent.appendChild(recDiv);
+                });
+                
+                categoryDiv.appendChild(categoryContent);
+                container.appendChild(categoryDiv);
             });
+        }
+
+        function categorizeRecommendations(recommendations) {
+            const categories = {};
+            
+            recommendations.forEach(rec => {
+                const category = rec.category || 'general';
+                if (!categories[category]) {
+                    categories[category] = [];
+                }
+                categories[category].push(rec);
+            });
+            
+            // Sort categories by priority
+            const sortedCategories = {};
+            const priorityOrder = ['water_management', 'soil_health', 'vegetation', 'fertility', 'ph_management', 'crop_planning', 'precision_agriculture', 'conservation', 'sustainability', 'general'];
+            
+            priorityOrder.forEach(category => {
+                if (categories[category]) {
+                    sortedCategories[category] = categories[category].sort((a, b) => {
+                        const priorityOrder = { critical: 4, high: 3, medium: 2, low: 1 };
+                        return priorityOrder[b.priority] - priorityOrder[a.priority];
+                    });
+                }
+            });
+            
+            return sortedCategories;
+        }
+
+        function getCategoryIcon(category) {
+            const icons = {
+                water_management: 'fas fa-tint',
+                soil_health: 'fas fa-seedling',
+                vegetation: 'fas fa-leaf',
+                fertility: 'fas fa-flask',
+                ph_management: 'fas fa-balance-scale',
+                crop_planning: 'fas fa-calendar-check',
+                precision_agriculture: 'fas fa-satellite',
+                conservation: 'fas fa-shield-alt',
+                sustainability: 'fas fa-recycle',
+                general: 'fas fa-info-circle'
+            };
+            return icons[category] || 'fas fa-info-circle';
+        }
+
+        function getCategoryTitle(category) {
+            const titles = {
+                water_management: 'Water Management',
+                soil_health: 'Soil Health',
+                vegetation: 'Vegetation & Plant Health',
+                fertility: 'Soil Fertility',
+                ph_management: 'pH Management',
+                crop_planning: 'Crop Planning',
+                precision_agriculture: 'Precision Agriculture',
+                conservation: 'Conservation',
+                sustainability: 'Sustainability',
+                general: 'General Recommendations'
+            };
+            return titles[category] || 'Recommendations';
+        }
+
+        function getRecommendationIcon(type, category) {
+            const typeIcons = {
+                'Critical Irrigation': 'fas fa-exclamation-triangle',
+                'Irrigation Management': 'fas fa-shower',
+                'Drainage Management': 'fas fa-water',
+                'Urgent Revegetation': 'fas fa-exclamation-circle',
+                'Vegetation Enhancement': 'fas fa-leaf',
+                'Soil Structure Improvement': 'fas fa-layer-group',
+                'Water Retention Enhancement': 'fas fa-sponge',
+                'Organic Matter Enhancement': 'fas fa-seedling',
+                'Severe Acidity Correction': 'fas fa-flask',
+                'Mild Acidity Adjustment': 'fas fa-adjust',
+                'Alkalinity Reduction': 'fas fa-flask',
+                'Water Stress Management': 'fas fa-thermometer-half',
+                'Soil Biology Enhancement': 'fas fa-microscope',
+                'Erosion Prevention': 'fas fa-shield-alt',
+                'Optimal Crop Selection': 'fas fa-check-circle',
+                'Carbon Sequestration': 'fas fa-tree',
+                'Biodiversity Enhancement': 'fas fa-dove'
+            };
+            
+            return typeIcons[type] || this.getCategoryIcon(category);
         }
 
         function getVegetationHealth(ndvi) {
@@ -1679,23 +2673,53 @@
             const container = document.querySelector('.container');
             const searchCard = document.querySelector('.search-card');
             
-            if (container && searchCard) {
-                // Insert after the search card
-                if (searchCard.nextElementSibling) {
-                    container.insertBefore(successDiv, searchCard.nextElementSibling);
+            try {
+                if (container && searchCard) {
+                    // Check if searchCard is actually a child of container
+                    if (container.contains(searchCard)) {
+                        // Insert after the search card
+                        const nextSibling = searchCard.nextElementSibling;
+                        if (nextSibling && container.contains(nextSibling)) {
+                            container.insertBefore(successDiv, nextSibling);
+                        } else {
+                            // Insert after searchCard by using insertAdjacentElement
+                            searchCard.insertAdjacentElement('afterend', successDiv);
+                        }
+                    } else {
+                        // searchCard not in container, just append to container
+                        container.appendChild(successDiv);
+                    }
                 } else {
-                    container.appendChild(successDiv);
+                    // Fallback: just add to the container or body
+                    if (container) {
+                        container.appendChild(successDiv);
+                    } else {
+                        // Last resort: add to body
+                        document.body.appendChild(successDiv);
+                    }
                 }
-            } else {
-                // Fallback: just add to the container
-                if (container) {
-                    container.appendChild(successDiv);
+            } catch (error) {
+                console.warn('Error inserting success message:', error);
+                // Fallback: try to append to container or body
+                try {
+                    if (container) {
+                        container.appendChild(successDiv);
+                    } else {
+                        document.body.appendChild(successDiv);
+                    }
+                } catch (fallbackError) {
+                    console.error('Failed to show success message:', fallbackError);
+                    return; // Give up
                 }
             }
             
             setTimeout(() => {
-                if (successDiv.parentNode) {
-                    successDiv.remove();
+                try {
+                    if (successDiv && successDiv.parentNode) {
+                        successDiv.remove();
+                    }
+                } catch (error) {
+                    console.warn('Error removing success message:', error);
                 }
             }, 4000);
         }

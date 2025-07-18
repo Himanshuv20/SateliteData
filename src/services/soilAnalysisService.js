@@ -110,17 +110,36 @@ class SoilAnalysisService {
         const { B11, B12 } = bands;
         const { ndmi } = indices;
         
-        // Combine SWIR bands and NDMI for moisture estimation
+        // More realistic soil moisture calculation based on NDMI thresholds
+        // NDMI > 0.4 indicates very wet conditions
+        // NDMI 0.1 to 0.4 indicates moderate moisture
+        // NDMI -0.1 to 0.1 indicates low moisture
+        // NDMI < -0.1 indicates very dry conditions
+        
+        let moistureIndex;
+        if (ndmi > 0.4) {
+            moistureIndex = 70 + (ndmi - 0.4) * 50; // 70-100% for very wet
+        } else if (ndmi > 0.1) {
+            moistureIndex = 40 + (ndmi - 0.1) * 100; // 40-70% for moderate
+        } else if (ndmi > -0.1) {
+            moistureIndex = 15 + (ndmi + 0.1) * 125; // 15-40% for low
+        } else {
+            moistureIndex = 5 + Math.max(0, (ndmi + 0.3) * 50); // 5-15% for very dry
+        }
+        
+        // Apply SWIR ratio for refinement (smaller adjustment)
         const swirRatio = B11 / B12;
+        moistureIndex *= (0.9 + (swirRatio - 1) * 0.1); // More conservative adjustment
         
-        // Normalize moisture index (0-100%)
-        let moistureIndex = ((ndmi + 1) / 2) * 100;
+        // Apply geographic and seasonal corrections (reduced impact)
+        const { lat } = location;
         
-        // Adjust based on SWIR ratio
-        moistureIndex *= (1 + (swirRatio - 1) * 0.2);
-        
-        // Apply geographic and seasonal corrections
-        moistureIndex = this.applyEnvironmentalCorrections(moistureIndex, location);
+        // Reduced latitude correction
+        if (Math.abs(lat) < 23.5) {
+            moistureIndex *= 1.05; // Tropical regions slightly more humid
+        } else if (Math.abs(lat) > 60) {
+            moistureIndex *= 0.95; // Polar regions slightly drier
+        }
         
         // Clamp to realistic range
         moistureIndex = Math.max(5, Math.min(95, moistureIndex));
@@ -252,70 +271,361 @@ class SoilAnalysisService {
     generateRecommendations(moisture, composition, indices, location) {
         const recommendations = [];
         
-        // Moisture recommendations
-        if (moisture.percentage < 20) {
+        // Enhanced moisture recommendations with detailed analysis
+        if (moisture.percentage < 15) {
             recommendations.push({
-                type: 'irrigation',
-                priority: 'high',
-                message: 'Soil moisture is low. Consider irrigation to improve crop growth.',
-                action: 'Increase irrigation frequency'
+                type: 'Critical Irrigation',
+                category: 'water_management',
+                priority: 'critical',
+                severity: 'high',
+                message: 'Critically low soil moisture detected. Immediate irrigation required to prevent crop stress.',
+                action: 'Implement emergency irrigation within 24-48 hours',
+                details: 'Install drip irrigation systems for efficient water use. Consider mulching to retain moisture.',
+                timeline: 'Immediate (0-2 days)',
+                cost: 'Medium',
+                impact: 'High - Prevents crop failure',
+                seasonality: this.getSeasonalAdvice('irrigation', location)
             });
-        } else if (moisture.percentage > 80) {
+        } else if (moisture.percentage < 30) {
             recommendations.push({
-                type: 'drainage',
-                priority: 'medium',
-                message: 'Soil may be waterlogged. Ensure proper drainage.',
-                action: 'Check drainage systems'
+                type: 'Irrigation Management',
+                category: 'water_management',
+                priority: 'high',
+                severity: 'medium',
+                message: 'Soil moisture is below optimal levels. Regular irrigation recommended.',
+                action: 'Increase irrigation frequency by 30-50%',
+                details: 'Monitor soil moisture daily. Consider installing moisture sensors for precise irrigation timing.',
+                timeline: 'Short-term (1-2 weeks)',
+                cost: 'Low',
+                impact: 'Medium - Improves crop yield',
+                seasonality: this.getSeasonalAdvice('irrigation', location)
+            });
+        } else if (moisture.percentage > 85) {
+            recommendations.push({
+                type: 'Drainage Management',
+                category: 'water_management',
+                priority: 'high',
+                severity: 'medium',
+                message: 'Excessive soil moisture may lead to waterlogging and root rot.',
+                action: 'Improve drainage systems and reduce irrigation',
+                details: 'Install subsurface drainage tiles. Create raised beds for better drainage. Check for irrigation system leaks.',
+                timeline: 'Medium-term (2-4 weeks)',
+                cost: 'High',
+                impact: 'High - Prevents root diseases',
+                seasonality: this.getSeasonalAdvice('drainage', location)
             });
         }
         
-        // Vegetation recommendations based on NDVI
-        if (indices.ndvi < 0.2) {
+        // Enhanced vegetation recommendations based on NDVI
+        if (indices.ndvi < 0.1) {
             recommendations.push({
-                type: 'vegetation',
+                type: 'Urgent Revegetation',
+                category: 'vegetation',
+                priority: 'critical',
+                severity: 'high',
+                message: 'Extremely poor vegetation cover. Risk of soil erosion and degradation.',
+                action: 'Implement immediate soil stabilization and planting program',
+                details: 'Use erosion control blankets, plant fast-growing cover crops, apply organic mulch.',
+                timeline: 'Immediate (0-1 week)',
+                cost: 'High',
+                impact: 'Critical - Prevents soil loss',
+                seasonality: this.getSeasonalAdvice('planting', location)
+            });
+        } else if (indices.ndvi < 0.3) {
+            recommendations.push({
+                type: 'Vegetation Enhancement',
+                category: 'vegetation',
                 priority: 'high',
-                message: 'Low vegetation cover detected. Consider planting or soil treatment.',
-                action: 'Implement revegetation strategies'
+                severity: 'medium',
+                message: 'Low vegetation density detected. Consider crop rotation or replanting.',
+                action: 'Plant cover crops or implement crop diversification',
+                details: 'Select drought-resistant varieties. Consider nitrogen-fixing legumes for soil improvement.',
+                timeline: 'Short-term (2-4 weeks)',
+                cost: 'Medium',
+                impact: 'Medium - Improves soil health',
+                seasonality: this.getSeasonalAdvice('planting', location)
             });
         }
         
-        // Soil composition recommendations
+        // Enhanced soil composition recommendations
         if (composition.clay > 60) {
             recommendations.push({
-                type: 'soil_structure',
+                type: 'Soil Structure Improvement',
+                category: 'soil_health',
                 priority: 'medium',
-                message: 'High clay content may affect drainage and root penetration.',
-                action: 'Add organic matter to improve soil structure'
+                severity: 'low',
+                message: 'High clay content restricts water infiltration and root development.',
+                action: 'Add organic amendments to improve soil structure',
+                details: 'Apply 2-4 inches of compost annually. Use gypsum to improve clay aggregation. Avoid working wet clay soil.',
+                timeline: 'Long-term (6-12 months)',
+                cost: 'Medium',
+                impact: 'Medium - Improves soil workability',
+                seasonality: this.getSeasonalAdvice('soil_amendment', location)
+            });
+        }
+        
+        if (composition.sand > 70) {
+            recommendations.push({
+                type: 'Water Retention Enhancement',
+                category: 'soil_health',
+                priority: 'medium',
+                severity: 'medium',
+                message: 'Sandy soil has poor water and nutrient retention capacity.',
+                action: 'Increase organic matter content and implement frequent, light irrigation',
+                details: 'Add compost, biochar, or well-aged manure. Use slow-release fertilizers. Consider polymer soil conditioners.',
+                timeline: 'Medium-term (3-6 months)',
+                cost: 'Medium',
+                impact: 'High - Improves nutrient retention',
+                seasonality: this.getSeasonalAdvice('soil_amendment', location)
             });
         }
         
         if (composition.organicMatter < 2) {
             recommendations.push({
-                type: 'fertility',
-                priority: 'medium',
-                message: 'Low organic matter content detected.',
-                action: 'Add compost or organic fertilizers'
+                type: 'Organic Matter Enhancement',
+                category: 'fertility',
+                priority: 'high',
+                severity: 'medium',
+                message: 'Low organic matter reduces soil fertility and water retention.',
+                action: 'Implement comprehensive organic matter building program',
+                details: 'Apply 25-50 lbs compost per 1000 sq ft. Plant cover crops. Use crop residue management. Consider vermicomposting.',
+                timeline: 'Long-term (12-24 months)',
+                cost: 'Medium',
+                impact: 'High - Transforms soil health',
+                seasonality: this.getSeasonalAdvice('organic_matter', location)
             });
         }
         
-        // pH recommendations
-        if (composition.ph < 6.0) {
+        // Enhanced pH recommendations with specific amendments
+        if (composition.ph < 5.5) {
             recommendations.push({
-                type: 'ph_adjustment',
-                priority: 'medium',
-                message: 'Soil is acidic. Consider liming to improve pH.',
-                action: 'Apply lime to increase soil pH'
+                type: 'Severe Acidity Correction',
+                category: 'ph_management',
+                priority: 'high',
+                severity: 'high',
+                message: 'Severely acidic soil limits nutrient availability and microbial activity.',
+                action: 'Apply agricultural lime with ongoing pH monitoring',
+                details: 'Apply 2-4 tons/acre of ground limestone. Test pH every 6 months. Consider pelletized lime for easier application.',
+                timeline: 'Medium-term (6-12 months)',
+                cost: 'Medium',
+                impact: 'High - Unlocks soil nutrients',
+                seasonality: this.getSeasonalAdvice('liming', location)
             });
-        } else if (composition.ph > 8.0) {
+        } else if (composition.ph < 6.2) {
             recommendations.push({
-                type: 'ph_adjustment',
+                type: 'Mild Acidity Adjustment',
+                category: 'ph_management',
                 priority: 'medium',
-                message: 'Soil is alkaline. Consider adding sulfur to lower pH.',
-                action: 'Apply sulfur to decrease soil pH'
+                severity: 'low',
+                message: 'Slightly acidic soil may benefit from pH adjustment for optimal crop growth.',
+                action: 'Apply moderate lime application',
+                details: 'Apply 1-2 tons/acre of agricultural lime. Monitor pH annually. Consider organic amendments like wood ash.',
+                timeline: 'Medium-term (6-12 months)',
+                cost: 'Low',
+                impact: 'Medium - Optimizes nutrient uptake',
+                seasonality: this.getSeasonalAdvice('liming', location)
+            });
+        } else if (composition.ph > 8.5) {
+            recommendations.push({
+                type: 'Alkalinity Reduction',
+                category: 'ph_management',
+                priority: 'high',
+                severity: 'high',
+                message: 'Highly alkaline soil restricts iron and zinc availability.',
+                action: 'Apply sulfur amendments and organic acidifiers',
+                details: 'Apply 10-20 lbs/1000 sq ft elemental sulfur. Use organic mulches. Consider iron sulfate for quick results.',
+                timeline: 'Long-term (12-18 months)',
+                cost: 'Medium',
+                impact: 'High - Prevents micronutrient deficiency',
+                seasonality: this.getSeasonalAdvice('acidification', location)
             });
         }
+        
+        // Advanced recommendations based on vegetation indices combinations
+        if (indices.ndvi > 0.7 && indices.ndmi < 0.3) {
+            recommendations.push({
+                type: 'Water Stress Management',
+                category: 'precision_agriculture',
+                priority: 'medium',
+                severity: 'medium',
+                message: 'Good vegetation cover but moisture stress detected in plants.',
+                action: 'Implement precision irrigation targeting plant water needs',
+                details: 'Use NDMI monitoring for irrigation scheduling. Consider deficit irrigation strategies during non-critical growth stages.',
+                timeline: 'Short-term (1-2 weeks)',
+                cost: 'Low',
+                impact: 'Medium - Optimizes water use efficiency',
+                seasonality: this.getSeasonalAdvice('precision_irrigation', location)
+            });
+        }
+        
+        // Soil health recommendations based on multiple factors
+        this.addSoilHealthRecommendations(recommendations, moisture, composition, indices, location);
+        
+        // Crop-specific recommendations
+        this.addCropRecommendations(recommendations, moisture, composition, indices, location);
+        
+        // Sustainability and environmental recommendations
+        this.addSustainabilityRecommendations(recommendations, moisture, composition, indices, location);
         
         return recommendations;
+    }
+
+    /**
+     * Add comprehensive soil health recommendations
+     */
+    addSoilHealthRecommendations(recommendations, moisture, composition, indices, location) {
+        // Soil biology enhancement
+        if (composition.organicMatter < 3 && indices.ndvi < 0.5) {
+            recommendations.push({
+                type: 'Soil Biology Enhancement',
+                category: 'soil_health',
+                priority: 'medium',
+                severity: 'medium',
+                message: 'Poor soil biology indicated by low organic matter and vegetation health.',
+                action: 'Implement biological soil enhancement program',
+                details: 'Apply mycorrhizal inoculants, beneficial bacteria, and compost tea. Minimize soil disturbance.',
+                timeline: 'Medium-term (3-6 months)',
+                cost: 'Medium',
+                impact: 'High - Builds soil ecosystem',
+                seasonality: this.getSeasonalAdvice('soil_biology', location)
+            });
+        }
+        
+        // Erosion prevention
+        if (composition.sand > 60 && indices.ndvi < 0.4) {
+            recommendations.push({
+                type: 'Erosion Prevention',
+                category: 'conservation',
+                priority: 'high',
+                severity: 'high',
+                message: 'Sandy soil with poor vegetation cover is susceptible to erosion.',
+                action: 'Implement immediate erosion control measures',
+                details: 'Install windbreaks, create contour farming, use cover crops, apply erosion control matting.',
+                timeline: 'Immediate (0-2 weeks)',
+                cost: 'Medium',
+                impact: 'Critical - Prevents soil loss',
+                seasonality: this.getSeasonalAdvice('erosion_control', location)
+            });
+        }
+    }
+
+    /**
+     * Add crop-specific recommendations
+     */
+    addCropRecommendations(recommendations, moisture, composition, indices, location) {
+        // Crop selection based on soil conditions
+        let cropSuggestions = [];
+        
+        if (composition.clay > 50 && moisture.percentage > 60) {
+            cropSuggestions = ['rice', 'cotton', 'soybeans'];
+        } else if (composition.sand > 60 && moisture.percentage < 40) {
+            cropSuggestions = ['drought-resistant crops', 'millet', 'sorghum'];
+        } else if (composition.ph >= 6.0 && composition.ph <= 7.5) {
+            cropSuggestions = ['corn', 'wheat', 'vegetables'];
+        }
+        
+        if (cropSuggestions.length > 0) {
+            recommendations.push({
+                type: 'Optimal Crop Selection',
+                category: 'crop_planning',
+                priority: 'low',
+                severity: 'low',
+                message: 'Current soil conditions are well-suited for specific crop types.',
+                action: `Consider planting: ${cropSuggestions.join(', ')}`,
+                details: 'These crops are well-adapted to your current soil conditions and will likely perform well with minimal amendments.',
+                timeline: 'Next planting season',
+                cost: 'Variable',
+                impact: 'Medium - Optimizes crop success',
+                seasonality: this.getSeasonalAdvice('crop_selection', location)
+            });
+        }
+    }
+
+    /**
+     * Add sustainability and environmental recommendations
+     */
+    addSustainabilityRecommendations(recommendations, moisture, composition, indices, location) {
+        // Carbon sequestration opportunities
+        if (composition.organicMatter < 4) {
+            recommendations.push({
+                type: 'Carbon Sequestration',
+                category: 'sustainability',
+                priority: 'low',
+                severity: 'low',
+                message: 'Opportunity to increase soil carbon storage and improve environmental sustainability.',
+                action: 'Implement carbon-building agricultural practices',
+                details: 'Use no-till farming, diverse crop rotations, cover cropping, and integrated livestock grazing.',
+                timeline: 'Long-term (2-5 years)',
+                cost: 'Low',
+                impact: 'High - Environmental and economic benefits',
+                seasonality: 'Year-round implementation'
+            });
+        }
+        
+        // Biodiversity enhancement
+        if (indices.ndvi < 0.6) {
+            recommendations.push({
+                type: 'Biodiversity Enhancement',
+                category: 'sustainability',
+                priority: 'low',
+                severity: 'low',
+                message: 'Enhance on-farm biodiversity to improve ecosystem services.',
+                action: 'Create habitat corridors and diverse plantings',
+                details: 'Plant native hedgerows, establish pollinator strips, create wildlife corridors, use diverse crop rotations.',
+                timeline: 'Long-term (1-3 years)',
+                cost: 'Medium',
+                impact: 'Medium - Ecosystem benefits',
+                seasonality: this.getSeasonalAdvice('biodiversity', location)
+            });
+        }
+    }
+
+    /**
+     * Get seasonal advice for different management practices
+     */
+    getSeasonalAdvice(practice, location) {
+        const month = new Date().getMonth(); // 0-11
+        const season = this.getSeason(month, location);
+        
+        const seasonalAdvice = {
+            irrigation: {
+                spring: 'Monitor emerging crops closely for water needs',
+                summer: 'Peak irrigation season - ensure adequate water supply',
+                fall: 'Reduce irrigation as temperatures cool',
+                winter: 'Minimal irrigation needed in most regions'
+            },
+            planting: {
+                spring: 'Optimal time for most crop planting',
+                summer: 'Plant heat-tolerant varieties',
+                fall: 'Plant cool-season crops and cover crops',
+                winter: 'Limited planting options in temperate regions'
+            },
+            soil_amendment: {
+                spring: 'Apply amendments before planting',
+                summer: 'Light applications to avoid plant stress',
+                fall: 'Ideal time for major soil amendments',
+                winter: 'Plan and prepare amendments for spring'
+            },
+            liming: {
+                spring: 'Apply lime before planting season',
+                summer: 'Avoid liming during hot weather',
+                fall: 'Best time for lime application',
+                winter: 'Good time for lime application in mild climates'
+            }
+        };
+        
+        return seasonalAdvice[practice]?.[season] || 'Consult local agricultural extension for timing';
+    }
+
+    /**
+     * Determine season based on month and location
+     */
+    getSeason(month, location) {
+        // Simplified seasonal determination (Northern Hemisphere default)
+        if (month >= 2 && month <= 4) return 'spring';
+        if (month >= 5 && month <= 7) return 'summer';
+        if (month >= 8 && month <= 10) return 'fall';
+        return 'winter';
     }
 
     // Helper methods
